@@ -17,10 +17,10 @@ models = [
         path='path/to/local/model',              # Path to the local model.
         api_key='<your_api_key>',                # API key for the large model.
         large_model_name='<large_model_name>',   # Name of the large model.
-        draft_length=64,                         # Draft length for speculative decoding.
+        draft_length=32,                         # Draft length for speculative decoding.
         use_spec=True,                           # Whether to use speculative decoding.
         batch_size=1,                            # Batch size for inference. Only support 1.
-        run_cfg=dict(num_gpus=1, num_procs=1),
+        run_cfg=dict(num_gpus=8, num_procs=8),
     )
 ]
 

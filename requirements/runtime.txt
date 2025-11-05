@@ -45,7 +45,7 @@ torch>=1.13.1
 tqdm>=4.64.1
 volcengine-python-sdk[ark]
 transformers==4.55.0
-flash_attn==2.7.4
+flash_attn==2.7.4.post1
 tree-sitter==0.21.3
 tree_sitter_languages>=1.10.2
 typer

@@ -156,7 +156,7 @@ class SpecModel(BaseModel):
         
         # Add default max_out_len.
         if max_out_len is None:
-            max_out_len = 65536
+            max_out_len = 4096
 
         dialogs = []
         results = []

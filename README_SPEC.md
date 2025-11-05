@@ -17,7 +17,11 @@ Detailed installation instructions can be found in the `README.md` file.
 Try running the minimal speculative decoding script with the following command:
 
 ```shell
-python3 opencompass/models/speculative_decoding.py --api_key <your_api_key> --local_model <local_model_path> --large_model_name <large_model_name> --prompt 讲一讲正态分布的原理。
+python3 opencompass/models/speculative_decoding.py \
+    --api_key <your_api_key> \
+    --local_model <local_model_path> \
+    --large_model_name <large_model_name> \
+    --prompt 讲一讲正态分布的原理。
 ```
 
 Replace `<your_api_key>`, `<local_model_path>`, and `<large_model_name>` with your actual values.
