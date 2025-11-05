@@ -1,11 +1,12 @@
 import re
-from typing import List, Union
+from typing import List, Union, Optional, Dict
 
 import torch
 from transformers import AutoTokenizer, AutoModelForCausalLM
 from volcenginesdkarkruntime import Ark
 
 from opencompass.models.base import BaseModel
+from opencompass.models.base_api import APITemplateParser
 from opencompass.utils.logging import get_logger
 from opencompass.utils.prompt import PromptList
 
@@ -39,6 +40,7 @@ def run_logitless_speculative_decoding(
         tokenize=False,
         add_generation_prompt=True
     )
+    input_text = full_text
     generated_token_count = 0
     
     if tokenizer.pad_token_id is None:
@@ -98,8 +100,11 @@ def run_logitless_speculative_decoding(
             corrected_draft = match
             full_text += corrected_draft
             generated_token_count += len(tokenizer.encode(corrected_draft, add_special_tokens=False))
-        
-    return full_text
+
+    pure_input_ids = tokenizer.encode(input_text, return_tensors="pt")
+    total_output_ids = tokenizer.encode(full_text, return_tensors="pt")
+    generated_token_ids = total_output_ids[0, pure_input_ids.shape[1]:]
+    return tokenizer.decode(generated_token_ids, skip_special_tokens=True)
 
 
 class SpecModel(BaseModel):
@@ -113,6 +118,7 @@ class SpecModel(BaseModel):
         use_spec: bool = True,
         max_seq_len: int = 2048,
         max_batch_size: int = 1,
+        meta_template: Optional[Dict] = None,
     ):  # noqa
         assert max_batch_size == 1, "SpecModel only supports max_batch_size=1."
         self._load_model(path=path)
@@ -127,6 +133,7 @@ class SpecModel(BaseModel):
         self.max_seq_len = max_seq_len
         self.logger = get_logger()
         self.large_model_name = large_model_name
+        self.template_parser = APITemplateParser(meta_template)
 
     def _load_model(
             self,
@@ -146,6 +153,11 @@ class SpecModel(BaseModel):
             max_out_len: int = 512,
             temperature: float = 0.6
         ) -> str:
+        
+        # Add default max_out_len.
+        if max_out_len is None:
+            max_out_len = 65536
+
         dialogs = []
         results = []
         for input in inputs:
@@ -200,6 +212,5 @@ if __name__ == "__main__":
         large_model_name=args.large_model_name,
         use_spec=not args.disable_spec,
     )
-
-    res = model.generate([args.prompt])
+    res = model.generate([args.prompt], max_out_len=2048)
     print(res)
