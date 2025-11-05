@@ -174,7 +174,6 @@ def logitless_speculative_decoding_with_kv_cache(
                 temperature=temperature,
                 pad_token_id=tokenizer.pad_token_id,
                 return_dict_in_generate=True,
-                output_past_key_values=True,
                 past_key_values=past_key_values,
             )
         draft_output_ids = outputs.sequences
@@ -261,7 +260,6 @@ class SpecModel(BaseModel):
             - meta_template (Optional[Dict], optional): Meta template for the model. Defaults to None.
         """
         assert max_batch_size == 1, "SpecModel only supports max_batch_size=1."
-        self._load_model(path=path)
         self.client = Ark(
             base_url="https://ark.cn-beijing.volces.com/api/v3",
             api_key=api_key,
@@ -274,6 +272,7 @@ class SpecModel(BaseModel):
         self.logger = get_logger()
         self.large_model_name = large_model_name
         self.template_parser = APITemplateParser(meta_template)
+        self._load_model(path=path)
 
     def _load_model(
             self,
