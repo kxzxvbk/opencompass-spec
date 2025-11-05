@@ -200,3 +200,6 @@ if __name__ == "__main__":
         large_model_name=args.large_model_name,
         use_spec=not args.disable_spec,
     )
+
+    res = model.generate([args.prompt])
+    print(res)
