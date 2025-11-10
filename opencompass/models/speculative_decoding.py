@@ -383,11 +383,13 @@ if __name__ == "__main__":
     parser.add_argument("--api_key", type=str, required=True)
     parser.add_argument("--prompt", type=str, required=True)
     parser.add_argument("--local_model", type=str, required=True)
+    parser.add_argument("--base_url", type=str, default="https://ark.cn-beijing.volces.com/api/v3")
     parser.add_argument("--large_model_name", type=str, default="deepseek-v3-1-250821")
     parser.add_argument("--disable_spec", action="store_true")
     args = parser.parse_args()
     model = SpecModel(
         path=args.local_model,
+        base_url=args.base_url,
         api_key=args.api_key,
         large_model_name=args.large_model_name,
         use_spec=not args.disable_spec,
