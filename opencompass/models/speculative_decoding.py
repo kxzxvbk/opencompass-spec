@@ -39,18 +39,33 @@ class APIClient:
         self.model_name = model_name
         self.base_url = base_url
     
-    def call(self, messages: list[dict]) -> str:
+    def call(self, messages: list[dict], max_completion_tokens: int) -> str:
+        if self.base_url.startswith("http://localhost"):
+            payload = {
+                "model": self.model_name,
+                "messages": messages,
+                "temperature": 0.3,
+                "chat_template_kwargs": {"enable_thinking": False},
+                "max_tokens": max_completion_tokens,
+            }
+        elif self.base_url == "https://ark.cn-beijing.volces.com/api/v3":
+            payload = {
+                "model": self.model_name,
+                "messages": messages,
+                "temperature": 0.3,
+                "thinking": {"type": "disabled"},
+                "max_completion_tokens": max_completion_tokens,
+            }
+        else:
+            raise ValueError(f"Unsupported base_url: {self.base_url}")
+        
         response = requests.post(
             self.base_url,
             headers={
                 "Authorization": f"Bearer {self.api_key}",
                 "Content-Type": "application/json"
             },
-            json={
-                "model": self.model_name,
-                "messages": messages,
-                "temperature": 0.3
-            }
+            json=payload
         )
         return response.json()["choices"][0]["message"]["content"]
 
@@ -125,6 +140,7 @@ def logitless_speculative_decoding(
                 {"role": "system", "content": large_model_sp},
                 {"role": "user", "content": full_text + f"<draft>{draft_text}</draft>"}
             ],
+            max_completion_tokens=draft_length + 2,
         )
         large_model_completion_text = response.choices[0].message.content
         
@@ -227,6 +243,7 @@ def logitless_speculative_decoding_with_kv_cache(
                 {"role": "system", "content": large_model_sp},
                 {"role": "user", "content": full_text + f"<draft>{draft_text}</draft>"}
             ],
+            max_completion_tokens=draft_length + 2,
         )
         large_model_completion_text = response.choices[0].message.content
         

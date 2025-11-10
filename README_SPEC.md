@@ -32,13 +32,13 @@ Please refer to the official documentation on how to apply for an API key. Volce
 
 ## Use vllm as the large model
 
-First, deploy vllm with the following command:
+First, deploy vllm with the following command (using the model name `Qwen3-235B-A22B-Instruct-2507` as an example):
 
 ```shell
 vllm serve Qwen3-235B-A22B-Instruct-2507 \
       --enable-prefix-caching \
       --tensor-parallel-size 8 \
-      --api-key 123
+      --api-key 123 \
 ```
 
 Then, use this vllm server as the large model with the following command:
