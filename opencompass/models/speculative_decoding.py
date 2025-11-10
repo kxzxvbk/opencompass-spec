@@ -16,7 +16,7 @@ PromptType = Union[PromptList, str]
 large_model_sp = """
 Your task is to verify the draft in <draft> tag. NEVER try to complete the draft text, only care about the correctness.
 1. If correct, always return: <draft>No Error</draft>
-2. Else, return: <draft>corrected draft</draft>. DO NOT return full text, rewrite the complete draft part.
+2. Else, return corrected draft in: <draft>...</draft>. DO NOT return full text, rewrite the complete draft part.
 """.strip()
 
 
@@ -49,7 +49,7 @@ class APIClient:
                 "chat_template_kwargs": {"enable_thinking": False},
                 "max_tokens": max_completion_tokens,
             }
-        elif self.base_url == "https://ark.cn-beijing.volces.com/api/v3":
+        elif self.base_url == "https://ark.cn-beijing.volces.com/api/v3/chat/completions":
             # volcengine model.
             payload = {
                 "model": self.model_name,
@@ -137,14 +137,13 @@ def logitless_speculative_decoding(
             continue
         
         # Call large model to verify draft.
-        response = client.call(
+        large_model_completion_text = client.call(
             messages=[
                 {"role": "system", "content": large_model_sp},
                 {"role": "user", "content": full_text + f"<draft>{draft_text}</draft>"}
             ],
-            max_completion_tokens=draft_length + 2,
+            max_completion_tokens=int(1.5 * draft_length),
         )
-        large_model_completion_text = response.choices[0].message.content
         
         # Parse large model response.
         try:
@@ -240,14 +239,13 @@ def logitless_speculative_decoding_with_kv_cache(
             continue
         
         # Call large model to verify draft.
-        response = client.call(
+        large_model_completion_text = client.call(
             messages=[
                 {"role": "system", "content": large_model_sp},
                 {"role": "user", "content": full_text + f"<draft>{draft_text}</draft>"}
             ],
-            max_completion_tokens=draft_length + 2,
+            max_completion_tokens=int(1.5 * draft_length),
         )
-        large_model_completion_text = response.choices[0].message.content
         
         # Parse large model response.
         try:

@@ -30,7 +30,7 @@ Replace `<your_api_key>`, `<local_model_path>`, and `<large_model_name>` with yo
 
 Please refer to the official documentation on how to apply for an API key. Volcengine doc: https://www.volcengine.com/docs/82379
 
-## Use vllm as the large model
+## Use vllm deployed model as the large model
 
 First, deploy vllm with the following command (using the model name `Qwen3-235B-A22B-Instruct-2507` as an example):
 
@@ -40,6 +40,8 @@ vllm serve Qwen3-235B-A22B-Instruct-2507 \
       --tensor-parallel-size 8 \
       --api-key 123 \
 ```
+
+See the official documentation for more deployment details: https://docs.vllm.ai/en/latest/
 
 Then, use this vllm server as the large model with the following command:
 
