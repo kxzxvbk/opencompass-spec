@@ -41,6 +41,7 @@ class APIClient:
     
     def call(self, messages: list[dict], max_completion_tokens: int) -> str:
         if self.base_url.startswith("http://localhost"):
+            # vllm deployed model.
             payload = {
                 "model": self.model_name,
                 "messages": messages,
@@ -49,6 +50,7 @@ class APIClient:
                 "max_tokens": max_completion_tokens,
             }
         elif self.base_url == "https://ark.cn-beijing.volces.com/api/v3":
+            # volcengine model.
             payload = {
                 "model": self.model_name,
                 "messages": messages,
@@ -377,8 +379,7 @@ class SpecModel(BaseModel):
             res = spec_function(
                 self.tokenizer, 
                 self.model, 
-                self.client, 
-                self.large_model_name, 
+                self.client,
                 dialog,
                 draft_length=self.draft_length,
                 max_new_tokens=max_out_len,

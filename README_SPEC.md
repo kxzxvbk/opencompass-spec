@@ -47,7 +47,7 @@ Then, use this vllm server as the large model with the following command:
 python3 opencompass/models/speculative_decoding.py \
     --api_key 123 \
     --local_model <local_model_path> \
-    --base_url http://localhost:8000 \
+    --base_url http://localhost:8000/v1/chat/completions \
     --large_model_name Qwen3-235B-A22B-Instruct-2507 \
     --prompt 讲一讲正态分布的原理。
 ```
