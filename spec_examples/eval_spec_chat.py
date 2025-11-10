@@ -15,6 +15,7 @@ models = [
         abbr='spec-model',                       # Name of this experiment.
         type=SpecModel,                          # Model class.
         path='path/to/local/model',              # Path to the local model.
+        base_url='<your_api_base_url>',          # Base URL for the large model API. For volcengine, it is: "https://ark.cn-beijing.volces.com/api/v3"
         api_key='<your_api_key>',                # API key for the large model.
         large_model_name='<large_model_name>',   # Name of the large model.
         draft_length=32,                         # Draft length for speculative decoding.

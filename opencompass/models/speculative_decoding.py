@@ -1,9 +1,9 @@
 import re
 from typing import List, Union, Optional, Dict
+import requests
 
 import torch
 from transformers import AutoTokenizer, AutoModelForCausalLM
-from volcenginesdkarkruntime import Ark
 
 from opencompass.models.base import BaseModel
 from opencompass.models.base_api import APITemplateParser
@@ -20,11 +20,45 @@ Your task is to verify the draft in <draft> tag. NEVER try to complete the draft
 """.strip()
 
 
+class APIClient:
+    def __init__(
+            self, 
+            api_key: str, 
+            model_name: str,
+            base_url: str
+        ):
+        """
+        Initialize API client.
+        
+        Arguments:
+            - api_key: API key for authentication.
+            - model_name: Name of model to use.
+            - url: URL for API endpoint.
+        """
+        self.api_key = api_key
+        self.model_name = model_name
+        self.base_url = base_url
+    
+    def call(self, messages: list[dict]) -> str:
+        response = requests.post(
+            self.base_url,
+            headers={
+                "Authorization": f"Bearer {self.api_key}",
+                "Content-Type": "application/json"
+            },
+            json={
+                "model": self.model_name,
+                "messages": messages,
+                "temperature": 0.3
+            }
+        )
+        return response.json()["choices"][0]["message"]["content"]
+
+
 def logitless_speculative_decoding(
     tokenizer, 
     small_model: torch.nn.Module, 
-    client: Ark, 
-    large_model_name: str, 
+    client: APIClient, 
     message: list[dict],
     draft_length: int = 64,
     max_new_tokens: int = 512,
@@ -38,7 +72,6 @@ def logitless_speculative_decoding(
         - tokenizer: Tokenizer of small model.
         - small_model: Small model for generating draft.
         - client: API client for calling large model.
-        - large_model_name: Name of large model when calling API.
         - message: List of messages in chat format.
         - draft_length: Length of draft to generate.
         - max_new_tokens: Maximum number of new tokens to generate.
@@ -87,15 +120,11 @@ def logitless_speculative_decoding(
             continue
         
         # Call large model to verify draft.
-        response = client.chat.completions.create(
-            model=large_model_name,
+        response = client.call(
             messages=[
                 {"role": "system", "content": large_model_sp},
                 {"role": "user", "content": full_text + f"<draft>{draft_text}</draft>"}
             ],
-            temperature=0.3,
-            max_completion_tokens=draft_length,
-            thinking={"type": "disabled"}
         )
         large_model_completion_text = response.choices[0].message.content
         
@@ -124,8 +153,7 @@ def logitless_speculative_decoding(
 def logitless_speculative_decoding_with_kv_cache(
     tokenizer, 
     small_model: torch.nn.Module, 
-    client: Ark, 
-    large_model_name: str, 
+    client: APIClient, 
     message: list[dict],
     draft_length: int = 64,
     max_new_tokens: int = 512,
@@ -139,7 +167,6 @@ def logitless_speculative_decoding_with_kv_cache(
         - tokenizer: Tokenizer of small model.
         - small_model: Small model for generating draft.
         - client: API client for calling large model.
-        - large_model_name: Name of large model when calling API.
         - message: List of messages in chat format.
         - draft_length: Length of draft to generate.
         - max_new_tokens: Maximum number of new tokens to generate.
@@ -195,15 +222,11 @@ def logitless_speculative_decoding_with_kv_cache(
             continue
         
         # Call large model to verify draft.
-        response = client.chat.completions.create(
-            model=large_model_name,
+        response = client.call(
             messages=[
                 {"role": "system", "content": large_model_sp},
                 {"role": "user", "content": full_text + f"<draft>{draft_text}</draft>"}
             ],
-            temperature=0.3,
-            max_completion_tokens=draft_length,
-            thinking={"type": "disabled"}
         )
         large_model_completion_text = response.choices[0].message.content
         
@@ -240,6 +263,7 @@ class SpecModel(BaseModel):
         path: str,
         api_key: str,
         large_model_name: str,
+        base_url: str,
         draft_length: int = 64,
         use_spec: bool = True,
         max_seq_len: int = 4096,
@@ -260,10 +284,10 @@ class SpecModel(BaseModel):
             - meta_template (Optional[Dict], optional): Meta template for the model. Defaults to None.
         """
         assert max_batch_size == 1, "SpecModel only supports max_batch_size=1."
-        self.client = Ark(
-            base_url="https://ark.cn-beijing.volces.com/api/v3",
+        self.client = APIClient(
+            base_url=base_url,
             api_key=api_key,
-            timeout=500,
+            model_name=large_model_name,
         )
         
         self.draft_length = draft_length
